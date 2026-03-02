@@ -1,0 +1,44 @@
+# Nome do workflow — aparece na aba Actions do GitHub
+name: Data Pipeline CI
+
+# TRIGGER — quando esse workflow vai rodar?
+on:
+  push:
+    branches: [main, develop]       # a cada push nessas branches
+  pull_request:
+    branches: [main]                # a cada PR aberto para main
+
+# JOBS — o que vai ser executado
+jobs:
+
+  quality-checks:                   # nome do job
+    runs-on: ubuntu-latest          # runner: máquina Linux do GitHub
+
+    steps:
+
+      # STEP 1 — baixa o código do repositório para o runner
+      # sem esse step, o runner não tem acesso ao seu código!
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      # STEP 2 — instala Python na versão certa
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # STEP 3 — instala as dependências necessárias
+      - name: 📦 Install dependencies
+        run: |
+          pip install flake8 pytest
+
+      # STEP 4 — verifica qualidade do código com flake8
+      # flake8 é um linter: detecta erros e más práticas no Python
+      - name: 🔍 Lint Python (flake8)
+        run: |
+          flake8 . --max-line-length=100 --exclude=.git
+
+      # STEP 5 — roda os testes automatizados
+      - name: ✅ Run unit tests (pytest)
+        run: |
+          pytest tests/ -v
